@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_sqlite' }
+        with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_sqlite' }
       - run: composer install --no-interaction --prefer-dist
         working-directory: taskflow-api
       - run: cp .env.example .env && php artisan key:generate && php artisan test && composer audit
@@ -32,6 +32,8 @@ jobs:
 
   deploy:
     needs: test
+    # Stays skipped until you set the repository variable DEPLOY_ENABLED=true (Settings > Secrets and variables > Actions > Variables)
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     env:

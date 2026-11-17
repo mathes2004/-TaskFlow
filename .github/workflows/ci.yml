@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_sqlite, pdo_mysql' }
+        with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_sqlite, pdo_mysql' }
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env && php artisan key:generate
       - run: php artisan test            # SQLite in-memory via phpunit.xml
@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_mysql' }
+        with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_mysql' }
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env && php artisan key:generate
       # ENUM columns and SUM(condition) behave differently on MySQL, so run the suite there too.
