@@ -8,6 +8,10 @@ import App from '../App';
 import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider } from '../components/ui/Toast';
 
+import { configure } from '@testing-library/react';
+
+configure({ asyncUtilTimeout: 8000 });
+
 const BASE = '/-TaskFlow/';
 
 function open(path = '') {

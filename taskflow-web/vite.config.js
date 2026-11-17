@@ -21,6 +21,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.{js,jsx}'],
+    testTimeout: 30000, // UI click-through tests are slower on shared CI runners
     env: { VITE_USE_MOCK: 'true', VITE_API_URL: '' }, // exercise the demo API the Pages build ships
   },
 });

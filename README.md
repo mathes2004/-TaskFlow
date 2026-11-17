@@ -14,7 +14,7 @@ https://mathes2004.github.io/-TaskFlow/ is a **demo build**: GitHub Pages only h
 One-time repo setting: **Settings > Pages > Source = GitHub Actions**.
 
 ## Requirements
-PHP 8.4+ (mbstring, xml, curl, mysql, zip, intl, bcmath), Composer, MySQL 8, Node 20+.
+PHP 8.4+ (mbstring, xml, curl, mysql, zip, intl, bcmath), Composer, MySQL 8, Node 22.22+ (24 LTS recommended).
 
 ## Local setup
 
