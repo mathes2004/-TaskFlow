@@ -13,6 +13,8 @@ const previewHeaders = {
 };
 
 export default defineConfig({
+  // GitHub Pages serves the site from /<repo>/, so the Pages workflow sets VITE_BASE. Default: /
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react(), tailwindcss()],
   server: { port: 5173, strictPort: true, host: 'localhost' },
   preview: { port: 5173, strictPort: true, host: 'localhost', headers: previewHeaders },

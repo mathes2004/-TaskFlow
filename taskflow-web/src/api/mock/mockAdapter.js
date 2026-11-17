@@ -287,6 +287,15 @@ function route(method, path, params, body) {
     return [201, { data: userJson(user) }];
   }
 
+  // Demo mode sends no email: same generic reply as the real API, and any reset token is rejected.
+  if (method === 'post' && path === '/api/forgot-password') {
+    throttle('forgot', 3);
+    return [200, { message: 'If that email exists, a link has been sent.' }];
+  }
+  if (method === 'post' && path === '/api/reset-password') {
+    throw invalid({ email: ['This password reset token is invalid.'] });
+  }
+
   if (method === 'post' && path === '/api/login') {
     const email = String(body.email ?? '').trim().toLowerCase();
     const errors = {};
