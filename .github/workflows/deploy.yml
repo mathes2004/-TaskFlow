@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_sqlite' }
       - run: composer install --no-interaction --prefer-dist
@@ -44,7 +44,7 @@ jobs:
       WEB_DIR: ${{ vars.WEB_DIR }}
       VITE_API_URL: ${{ vars.VITE_API_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
       - name: Build frontend (only public values are baked in)
