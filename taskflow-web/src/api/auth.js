@@ -12,3 +12,12 @@ export async function login(payload) {
 }
 export const logout = () => api.post('/api/logout');
 export const fetchMe = async () => (await api.get('/api/user')).data.data;
+
+export async function forgotPassword(email) {
+  await getCsrfCookie();
+  return (await api.post('/api/forgot-password', { email })).data;
+}
+export async function resetPassword(payload) {
+  await getCsrfCookie();
+  return (await api.post('/api/reset-password', payload)).data;
+}

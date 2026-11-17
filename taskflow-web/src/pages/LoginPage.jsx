@@ -46,7 +46,10 @@ export default function LoginPage() {
         {formError && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>}
         <Input label="Email" type="email" name="email" autoComplete="email" required value={form.email} onChange={set('email')} error={errors.email} />
         <PasswordInput label="Password" name="password" autoComplete="current-password" required value={form.password} onChange={set('password')} error={errors.password} />
-        <Checkbox label="Remember me" checked={form.remember} onChange={set('remember')} />
+        <div className="flex items-center justify-between">
+          <Checkbox label="Remember me" checked={form.remember} onChange={set('remember')} />
+          <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">Forgot password?</Link>
+        </div>
         <Button type="submit" className="w-full" loading={saving} loadingText="Logging in…">Log in</Button>
       </form>
     </AuthShell>
