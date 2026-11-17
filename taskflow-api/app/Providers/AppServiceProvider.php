@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -19,25 +23,40 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Development: fail loudly on mass-assignment, lazy-loading and missing-attribute mistakes.
+        // Dev only: throw on mass-assignment / lazy-loading mistakes.
         Model::shouldBeStrict(! $this->app->isProduction());
 
-        // Password rules: min 8, letters + numbers, and a breach check in production.
-        Password::defaults(fn () => $this->app->isProduction()
-            ? Password::min(8)->letters()->numbers()->uncompromised()
-            : Password::min(8)->letters()->numbers());
+        // max(72): bcrypt ignores everything after 72 bytes. uncompromised() = Have I Been Pwned (k-anonymity).
+        Password::defaults(function () {
+            $rule = Password::min(8)->letters()->numbers()->max(72);
 
-        // 5 attempts per minute per email + IP (6th attempt returns 429 with Retry-After).
-        RateLimiter::for('login', fn (Request $r) => Limit::perMinute(5)
-            ->by(Str::lower((string) $r->input('email')).'|'.$r->ip()));
+            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
+        });
 
-        // 3 sign-ups per minute per IP.
+        RateLimiter::for('login', function (Request $r) {
+            return [
+                Limit::perMinute(5)->by(Str::lower((string) $r->input('email')).'|'.$r->ip()), // per account + IP
+                Limit::perMinute(30)->by($r->ip()),                                               // credential stuffing
+            ];
+        });
         RateLimiter::for('register', fn (Request $r) => Limit::perMinute(3)->by($r->ip()));
-
-        // Password change / account deletion: 5 per minute per user.
+        RateLimiter::for('password-reset', fn (Request $r) => [
+            Limit::perMinute(3)->by(Str::lower((string) $r->input('email')).'|'.$r->ip()),
+            Limit::perMinute(10)->by($r->ip()),
+        ]);
         RateLimiter::for('sensitive', fn (Request $r) => Limit::perMinute(5)->by($r->user()?->id ?: $r->ip()));
-
-        // Everything else: 60 per minute per user.
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(60)->by($r->user()?->id ?: $r->ip()));
+
+        // Reset links open the SPA, not an API route.
+        ResetPassword::createUrlUsing(fn ($user, string $token) => rtrim((string) config('app.frontend_url'), '/')
+            .'/reset-password?token='.$token.'&email='.urlencode($user->getEmailForPasswordReset()));
+
+        // Security logging (guide 9.10): failed logins with email + IP. Never the password.
+        Event::listen(Failed::class, function (Failed $event) {
+            Log::warning('auth.login_failed', [
+                'email' => Str::lower((string) ($event->credentials['email'] ?? '')),
+                'ip' => request()->ip(),
+            ]);
+        });
     }
 }

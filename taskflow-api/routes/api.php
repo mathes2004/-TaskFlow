@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:password-reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
 });
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
