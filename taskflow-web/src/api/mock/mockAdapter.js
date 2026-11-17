@@ -265,8 +265,7 @@ function route(method, path, params, body) {
   if (method === 'get' && path === '/sanctum/csrf-cookie') return [204, null];
 
   if (method === 'post' && path === '/api/register') {
-    if (getSessionUserId()) throw new HttpError(302, { message: 'Already authenticated.' });
-    throttle('register', 3);
+    throttle('register', 10);
     const errors = {};
     const add = (f, m) => (errors[f] ??= []).push(m);
     const name = String(body.name ?? '').trim();

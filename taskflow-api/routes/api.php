@@ -7,12 +7,13 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:password-reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
-});
+// Public auth endpoints. No `guest` middleware: it answers an already-logged-in browser with an HTML redirect,
+// which a JSON API client cannot use. The controllers handle that case (switching account) instead.
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:password-reset');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
+
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -39,7 +39,8 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(30)->by($r->ip()),                                               // credential stuffing
             ];
         });
-        RateLimiter::for('register', fn (Request $r) => Limit::perMinute(3)->by($r->ip()));
+        // 10/min/IP: validation mistakes count too, and an office/NAT can share one IP, so 3/min locked real people out.
+        RateLimiter::for('register', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
         RateLimiter::for('password-reset', fn (Request $r) => [
             Limit::perMinute(3)->by(Str::lower((string) $r->input('email')).'|'.$r->ip()),
             Limit::perMinute(10)->by($r->ip()),

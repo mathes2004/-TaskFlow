@@ -16,6 +16,9 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request)
     {
+        // Registering while another account is signed in simply switches to the new account.
+        Auth::guard('web')->logout();
+
         $user = User::create($request->safe()->only(['name', 'email', 'password']))->refresh();
 
         Auth::guard('web')->login($user);

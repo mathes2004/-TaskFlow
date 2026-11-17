@@ -91,7 +91,7 @@ class SecurityTest extends TestCase
     public function test_throttled_requests_are_logged(): void
     {
         Log::spy();
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < 11; $i++) {
             $this->postJson('/api/register', ['name' => 'x']);
         }
         Log::shouldHaveReceived('warning')->withArgs(fn ($m) => $m === 'security.throttled')->atLeast()->once();

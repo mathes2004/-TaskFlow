@@ -89,6 +89,33 @@ class AuthTest extends TestCase
         $this->postJson('/api/login', $payload)->assertTooManyRequests()->assertHeader('Retry-After');
     }
 
+    public function test_login_while_already_signed_in_switches_account_and_returns_json(): void
+    {
+        $alice = User::factory()->create(['email' => 'alice2@example.com']);
+        $bob = User::factory()->create(['email' => 'bob2@example.com']);
+
+        $this->actingAs($alice)->postJson('/api/login', ['email' => 'bob2@example.com', 'password' => 'Password123'])
+            ->assertOk()->assertJsonPath('data.email', 'bob2@example.com');
+        $this->assertAuthenticatedAs($bob);
+    }
+
+    public function test_register_while_already_signed_in_creates_and_switches_to_the_new_account(): void
+    {
+        $alice = User::factory()->create();
+
+        $this->actingAs($alice)->postJson('/api/register', $this->validRegistration(['email' => 'new@example.com']))
+            ->assertCreated()->assertJsonPath('data.email', 'new@example.com');
+        $this->assertAuthenticatedAs(User::where('email', 'new@example.com')->first());
+    }
+
+    public function test_register_allows_ten_attempts_per_minute_then_throttles(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/api/register', ['name' => 'x'])->assertUnprocessable(); // validation errors still count
+        }
+        $this->postJson('/api/register', ['name' => 'x'])->assertTooManyRequests()->assertHeader('Retry-After');
+    }
+
     public function test_me_requires_authentication(): void
     {
         $this->getJson('/api/user')->assertUnauthorized();
