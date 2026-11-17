@@ -1,0 +1,19 @@
+# Secrets and local config – never commit (guide 9.9)
+.env
+.env.*
+!.env.example
+!.env.*.example
+!taskflow-web/.env.development
+!taskflow-web/.env.production
+*.key
+*.pem
+*.sql.gz
+*.sql.gz.enc
+*.enc
+backups/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
