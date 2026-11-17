@@ -18,5 +18,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: { port: 5173, strictPort: true, host: 'localhost' },
   preview: { port: 5173, strictPort: true, host: 'localhost', headers: previewHeaders },
-  test: { environment: 'node', include: ['src/**/*.test.js'] },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.{js,jsx}'],
+    env: { VITE_USE_MOCK: 'true', VITE_API_URL: '' }, // exercise the demo API the Pages build ships
+  },
 });

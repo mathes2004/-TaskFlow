@@ -35,6 +35,8 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
         run: |
           npm ci
+          npm run lint
+          npm test -- --run      # includes the click-through test of the demo
           npm run build
           cp dist/index.html dist/404.html   # SPA fallback: deep links like /tasks/3 load the app
       - uses: actions/upload-pages-artifact@v3

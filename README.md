@@ -9,6 +9,10 @@ Full specification: [TaskFlow_Complete_Build_Guide.md](TaskFlow_Complete_Build_G
 | `taskflow-web/` | React frontend |
 | `database/taskflow_schema.sql` | Reference SQL schema |
 
+## Live demo
+https://mathes2004.github.io/-TaskFlow/ is a **demo build**: GitHub Pages only hosts static files, so it runs the frontend against a built-in demo API and keeps data in each visitor's own browser. Log in with `alice@example.com` / `Password123` or register. The real Laravel + MySQL stack is deployed separately (see `deploy/README.md`).
+One-time repo setting: **Settings > Pages > Source = GitHub Actions**.
+
 ## Requirements
 PHP 8.4+ (mbstring, xml, curl, mysql, zip, intl, bcmath), Composer, MySQL 8, Node 20+.
 
