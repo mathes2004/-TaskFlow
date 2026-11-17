@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: taskflow-api } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_sqlite, pdo_mysql' }
       - run: composer install --no-interaction --prefer-dist
@@ -43,7 +43,7 @@ jobs:
       DB_USERNAME: root
       DB_PASSWORD: root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.4', extensions: 'mbstring, intl, pdo_mysql' }
       - run: composer install --no-interaction --prefer-dist
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: taskflow-web } }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
       - run: npm ci
@@ -69,7 +69,7 @@ jobs:
     name: No committed secrets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Fail if a real .env file is tracked
         run: |
           tracked=$(git ls-files | grep -E '(^|/)\.env($|\.local$|\.backup$)' || true)
