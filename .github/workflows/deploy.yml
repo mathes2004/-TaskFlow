@@ -1,0 +1,68 @@
+name: Deploy
+
+# staging    <- push to branch `staging`
+# production <- push to `main` (the GitHub "production" environment should require a reviewer)
+on:
+  push:
+    branches: [staging, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_sqlite' }
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: taskflow-api
+      - run: cp .env.example .env && php artisan key:generate && php artisan test && composer audit
+        working-directory: taskflow-api
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
+      - run: npm ci && npm run lint && npm test -- --run && npm audit --audit-level=high
+        working-directory: taskflow-web
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    env:
+      # Set per environment under Settings > Environments (secrets: SSH_KEY, SSH_KNOWN_HOSTS; variables: the rest)
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      API_DIR: ${{ vars.API_DIR }}
+      WEB_DIR: ${{ vars.WEB_DIR }}
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
+      - name: Build frontend (only public values are baked in)
+        working-directory: taskflow-web
+        run: |
+          npm ci
+          printf 'VITE_API_URL=%s\nVITE_USE_MOCK=false\n' "$VITE_API_URL" > .env.production
+          npm run build
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts   # pinned host key, no TOFU
+      - name: Upload frontend
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/id_deploy" \
+            taskflow-web/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$WEB_DIR/"
+      - name: Deploy API
+        run: |
+          ssh -i ~/.ssh/id_deploy "$DEPLOY_USER@$DEPLOY_HOST" \
+            "API_DIR='$API_DIR' BRANCH='${{ github.ref_name }}' bash -s" < deploy/scripts/deploy.sh
+      - name: Smoke test
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 3 "${VITE_API_URL}/up" >/dev/null

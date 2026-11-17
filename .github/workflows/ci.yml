@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (SQLite)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: taskflow-api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_sqlite, pdo_mysql' }
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test            # SQLite in-memory via phpunit.xml
+      - run: composer audit
+
+  api-mysql:
+    name: API (MySQL 8)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: taskflow-api } }
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: taskflow_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot" --health-interval=5s
+          --health-timeout=5s --health-retries=20
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: taskflow_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: 'mbstring, intl, pdo_mysql' }
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      # ENUM columns and SUM(condition) behave differently on MySQL, so run the suite there too.
+      - run: php artisan test
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: taskflow-web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -- --run
+      - run: npm audit --audit-level=high
+      - run: npm run build
+
+  secrets-check:
+    name: No committed secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if a real .env file is tracked
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)\.env($|\.local$|\.backup$)' || true)
+          if [ -n "$tracked" ]; then echo "Tracked env files:"; echo "$tracked"; exit 1; fi
+      - name: Fail if an APP_KEY is committed
+        run: |
+          if git grep -nE '^APP_KEY=base64:[A-Za-z0-9+/=]{20,}' -- ':!*.md'; then exit 1; fi
