@@ -25,7 +25,7 @@ jobs:
         working-directory: taskflow-api
       - run: cp .env.example .env && php artisan key:generate && php artisan test && composer audit
         working-directory: taskflow-api
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
       - run: npm ci && npm run lint && npm test -- --run && npm audit --audit-level=high
         working-directory: taskflow-web
@@ -45,7 +45,7 @@ jobs:
       VITE_API_URL: ${{ vars.VITE_API_URL }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24, cache: npm, cache-dependency-path: taskflow-web/package-lock.json }
       - name: Build frontend (only public values are baked in)
         working-directory: taskflow-web
